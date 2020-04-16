@@ -63,11 +63,12 @@ try
     {
         $resultArray += New-Object -TypeName psobject -Property @{Site= $site; 
                                                                     TotalUserCount = ($userData | ?{$_.Site -eq $site}).count;
-                                                                    EmployeeCount = ($userData | ?{($_.Site -eq $site) -and ($_.AccountType -eq "Employee")}).count;
-                                                                    ContractorCount = ($userData | ?{($_.Site -eq $site) -and ($_.AccountType -eq "Contractor")}).count;
+                                                                    EmployeeCount = GetTotalNumberOf -siteinQuestion $site -AccountToLookFor "Employee";
+                                                                    ContractorCount = GetTotalNumberOf -siteinQuestion $site -AccountToLookFor "Contractor";
                                                                     TotalMailboxSizeGB = (($userData | ?{$_.Site -eq $site}).MailboxSizeGB | Measure-Object -Sum).Sum;
                                                                     AverageMailboxSizeGB = (($userData | ?{$_.Site -eq $site}).MailboxSizeGB | Measure-Object -Average).Average.tostring("#.#")}
     }
+    
     $resultArray | Export-Csv $newCSVPath -NoTypeInformation
 
     if(Test-Path($newCSVPath))
@@ -86,4 +87,17 @@ catch
 finally
 {
     $resultArray = $null
+}
+
+
+function GetTotalNumberOf
+{
+    Param(
+        [parameter(Mandatory=$true)]
+        [String]$siteinQuestion,
+
+        [parameter(Mandatory=$true)]
+        [String]$AccountToLookFor
+    )
+   return ($userData | ?{($_.Site -eq $siteinQuestion) -and ($_.AccountType -eq $AccountToLookFor.ToLower())}).count;
 }
